@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,22 +25,36 @@ public class ProductServiceImpl implements ProductService {
                 productDTO.getPrice(),
                 productDTO.getQuantity()
         );
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+        return toProductDTO(savedProduct);
     }
 
     @Override
     public List<ProductDTO> getAllProducts() {
-        return productRepository.findAll();
+        return productRepository.findAll().stream()
+                .map(this::toProductDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ProductDTO> searchByCategory(String category) {
-        return productRepository.findByCategoryIgnoreCase(category);
+        return productRepository.findByCategoryIgnoreCase(category).stream()
+                .map(this::toProductDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public void deleteProductByName(String name) {
         productRepository.findByProductNameIgnoreCase(name)
                 .ifPresent(productRepository::delete);
+    }
+
+    private ProductDTO toProductDTO(Product product) {
+        return new ProductDTO(
+                product.getProductName(),
+                product.getCategory(),
+                product.getPrice(),
+                product.getQuantity()
+        );
     }
 }
